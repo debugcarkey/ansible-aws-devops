@@ -1,0 +1,9 @@
+#!/bin/bash
+cd /opt
+git clone https://github.com/phalcon/cphalcon.git
+cd /opt/cphalcon
+git checkout v3.4.1
+git pull origin v3.4.1
+cd /opt/cphalcon/build
+./install
+echo "extension=phalcon.so" > /etc/php.d/50-phalcon.ini

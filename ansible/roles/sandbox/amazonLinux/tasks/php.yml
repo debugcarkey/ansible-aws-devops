@@ -1,0 +1,123 @@
+  # Install httpd.
+  - name: Install Dependencies.
+    become: yes
+    become_user: root
+    yum: pkg={{item}} state=installed
+    with_items:
+      - php56
+      - php56-pecl-imagick
+      - php56-mysqlnd
+      - php56-mbstring
+      - php56-gd
+      - php56-intl
+  
+  - name: Copy phalcon setup script
+    run_once: true
+    become: yes
+    become_user: root
+    template:
+      src: php/phalcon-setup.sh.j2
+      dest: /tmp/phalcon-setup.sh
+      mode: 0777
+ 
+  # Run phalcon setup script
+  - name: Execute phalcon setup script.
+    run_once: true
+    become: yes
+    become_user: root
+    shell: /tmp/phalcon-setup.sh
+    args:
+      creates: /tmp/.phalcon-installed
+      
+  - name: Install Phalcon Framework
+    become: yes
+    become_user: root
+    yum: pkg={{item}} state=installed
+    with_items:
+      - php56
+      - php56-pecl-imagick
+      - php56-mysqlnd
+      - php56-mbstring
+      - php56-gd
+      
+  - name: Setup composer 
+    become: yes
+    become_user: root
+    args:
+      creates: /tmp/.composer-installed
+    shell: cd /tmp && curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/composer
+      
+  # PHP config task that enables <? ?> tags in php.
+  - name: Enable short hand php tags.
+    become: yes
+    become_user: root
+    lineinfile:
+      state: present
+      path: /etc/php.ini
+      regexp: "^short_open_tag = Off"
+      line: "short_open_tag = On"
+      backrefs: yes
+       
+  # Enable errors in php for development environment.
+  - name: Display errors in php.
+    become: yes
+    run_once: yes
+    become_user: root
+    lineinfile: 
+       state: present
+       path: /etc/php.ini
+       regexp: "^display_errors = Off"
+       line: "display_errors = On"
+       backrefs: yes
+  
+  # Sets default time zone to europe/london in php.ini config
+  - name: Set default time zone in php.
+    become: yes
+    run_once: yes
+    become_user: root
+    lineinfile: 
+      state: present
+      backrefs: yes
+      path: /etc/php.ini
+      regexp: "^;date.timezone ="
+      line: "date.timezone='europe/london'"
+   
+  - name: Set application environment for terminal php script
+    become: yes
+    run_once: yes
+    become_user: root
+    args:
+      creates: /tmp/.application-env-set
+    shell: echo "export APPLICATION_ENV={{application_env}}" >> /etc/bashrc
+    
+    # Creates xdebug folder in temp directory.
+  - name: Create xdebug temp directory
+    file:
+      path: /tmp/xdebug
+      state: directory 
+      
+    # Copies xdebug configuration script
+  - name: Copy xdebug installation shell script.
+    run_once: true
+    become: yes
+    become_user: root
+    template:
+      src: php/xdebug.sh.j2
+      dest: /tmp/xdebug/setup.sh
+      mode: 0777
+    
+  - name: Run xdebug configuration script
+    become: yes
+    run_once: true
+    become_user: root
+    shell: /tmp/xdebug/setup.sh
+    args:
+      creates: /tmp/.xdebug-configured
+    
+  # After updating php.ini, restart apache server for the changes to affect.
+  - name: Restart apache server
+    become: yes
+    become_user: root
+    service:
+      name: httpd
+      state: restarted

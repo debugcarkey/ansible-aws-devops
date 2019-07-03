@@ -1,0 +1,54 @@
+  # Install httpd.
+  - name: Install Dependencies.
+    become: yes
+    become_user: root
+    yum: pkg={{item}} state=installed
+    with_items:
+      - openssl-devel
+      - zlib-devel
+      - httpd24 
+      - mod24_ssl
+ 
+  # sets httpd and mysqld as service.
+  - name: Start httpd  as service
+    become: yes
+    become_user: root
+    shell: chkconfig httpd on
+
+  # HTTPD task
+  - name: Make directory for SSL certificates
+    become: yes
+    become_user: root
+    file: path=/etc/ssl/private state=directory
+    mode: 0700
+    
+  # HTTPD task  
+  - name: Generate self signed certificate
+    become: yes
+    become_user: root
+    shell: openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/apache-selfsigned.key -out /etc/ssl/certs/apache-selfsigned.crt -subj "/C=GB/ST=London/L=London/O=Global Security/OU=IT Department/CN=cloudscraper.com"
+    
+      
+  # HTTPD task
+  - name: Define httpd virtualhost for cloudscraper exchange
+    become: yes
+    become_user: root
+    template:
+      src: httpd/cloudscraper-exchange.local.conf.j2
+      dest: /etc/httpd/conf.d/cloudscraper-exchange.local.conf
+      
+   # HTTPD task
+  - name: Define httpd virtualhost for cloudscraper (dot) com
+    become: yes
+    become_user: root
+    template:
+      src: httpd/cloudscraper.local.conf.j2
+      dest: /etc/httpd/conf.d/cloudscraper.local.conf
+      
+   # HTTPD task
+  - name: Define httpd virtualhost for cloudscraper WP 
+    become: yes
+    become_user: root
+    template:
+      src: httpd/cloudscraper.wp.local.conf.j2
+      dest: /etc/httpd/conf.d/cloudscraper.wp.local.conf

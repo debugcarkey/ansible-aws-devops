@@ -1,0 +1,38 @@
+---
+  # Upgrade all packages.
+  #- name: upgrade all packages
+   # become: yes
+   # become_user: root
+   # apt:
+   #   name: '*'
+    #  state: latest
+      
+  - name: Add ansible repository
+    become: yes
+    become_user: root
+    apt_repository: repo='ppa:ansible/ansible-2.5'
+    
+  - name: Install Dependencies.
+    become: yes
+    become_user: root
+    apt: pkg={{item}} state=installed
+    with_items:
+     # - php5.6
+      - ansible
+     # - mysql-server-5.7
+     # - python3-pymysql
+     #- openssl-devel
+     #- python-pymysql
+     #- zlib-devel
+     #- php56
+     #- mod24_ssl
+     #- ImageMagick
+     #- php56-pecl-imagick 
+     #- zsh
+     #- mailx
+     #- mysql56-server
+     #- php56-mysqlnd
+     
+  - include: "php.yml"
+  - include: "mysql.yml"
+  - include: "httpd.yml"

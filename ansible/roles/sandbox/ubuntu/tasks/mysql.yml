@@ -1,0 +1,104 @@
+ # Add mysql repository
+  - name: Add mysql repository
+    become: yes
+    become_user: root
+    apt_repository: repo='ppa:ondrej/mysql-5.6'
+    
+  # Install mysql.
+  - name: Install Dependencies.
+    become: yes
+    become_user: root
+    apt: pkg={{item}} state=installed
+    with_items:
+      - mysql-server-5.6
+      - python-mysqldb
+      
+  - name: Disable mysql host binding
+    become: yes
+    become_user: root
+    lineinfile:
+      path:  /etc/mysql/mysql.conf.d/mysqld.cnf
+      regexp: "^bind-address"
+      line: '#bind-address'
+      
+  # Creates mysql folder in temp directory.
+  - name: Create mysql temp directory
+    file:
+      path: /tmp/mysql
+      state: directory
+      
+  # MYSQL task that copies the shell script to remote host.  
+  - name: Copy mysql installation shell script.
+    run_once: true
+    become: yes
+    become_user: root
+    template:
+      src: mysql/setup.sh.j2
+      dest: /tmp/mysql/setup.sh
+      mode: 0777
+   
+  # Mysql task that runs mysql configuration script to set root password and many other security related options.
+  - name: Mysql Secure installation
+    run_once: true
+    become: yes
+    become_user: root
+    shell: /tmp/mysql/setup.sh
+    args:
+      creates: /tmp/.mysqlConfigured
+  
+  # Mysql task that removes copied mysql configuration shell script after execution. 
+  - name: Remove Mysql secure installation file. 
+    become: yes
+    become_user: root
+    file:
+      path: /tmp/mysql/setup.sh
+      state: absent
+      
+   # Mysql task that creates database user.    
+  - name: Create database users
+    mysql_user: name=root
+            name={{ item.name }}
+            host="{{ item.host | default("%")  }}"
+            password="{{ item.pass }}"
+            priv="*.*:ALL"
+            login_user="root"
+            login_password="{{ mysql_root_password }}"
+            state=present
+    with_items: 
+      - {name: "{{mysql_user1_username}}", pass: "{{mysql_user1_password}}"}
+  
+  # Mysql task that creates a new database.
+  - name: Create a new database
+    mysql_db:
+      name: "{{csx_database}}"
+      state: present
+      login_password: "{{mysql_root_password}}"
+      login_user: root
+      
+   # Copies database dump file.   
+  - name: Copy database dump to be imported
+    run_once: true
+    become: yes
+    become_user: root
+    copy:
+      src: data/mysql/csxMysqlDump.sql
+      dest: /tmp/mysql/csxMysqlDump.sql
+      mode: 0777
+      
+   # Restores the dumped database file.    
+  - name: Restore the database
+    mysql_db:
+      name: "{{csx_database}}"
+      state: import
+      target: /tmp/mysql/csxMysqlDump.sql
+      login_password: "{{mysql_root_password}}"
+      login_user: root
+  
+  # Removes the mysql dump file.    
+  - name: Remove Mysql dump. 
+    become: yes
+    become_user: root
+    file:
+      path: /tmp/mysql/csxMysqlDump.sql
+      state: absent
+  

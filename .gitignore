@@ -1,0 +1,9 @@
+.vagrant
+.DS_Store
+.project
+.settings
+.retry
+.tmp
+.bkup
+.buildpath
+*.log

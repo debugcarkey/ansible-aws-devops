@@ -1,0 +1,9 @@
+---
+- hosts: all
+
+  pre_tasks:  
+      
+  roles:
+    - role: ../../../roles/sandbox/amazonLinux
+      become: yes
+      become_user: root

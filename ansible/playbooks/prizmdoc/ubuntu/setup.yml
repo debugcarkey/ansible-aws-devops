@@ -1,0 +1,52 @@
+---
+- hosts: all
+  vars:
+    application_env: "dev"
+    prizmdoc_sample_url: "http://cloudscraper-prizmdoc-sample.local"
+    prizmdoc_sample_dir: "/usr/share/prizm/Samples/php"
+
+  pre_tasks:  
+    - name: Install apache server
+      become: yes
+      become_user: root
+      apt:
+        name: apache2
+        state: present
+        
+    - name: Add php ppa package.
+      become: yes
+      become_user: root
+      apt_repository:
+        repo: "ppa:ondrej/php"
+        state: present
+    
+    - name: Install php packages.
+      become: yes
+      become_user: root
+      apt:
+        name: "{{ item }}"
+      with_items:
+        - php5.6
+        - php5.6-curl
+        - php5.6-xml
+        
+  roles: 
+    - role: ../../../roles/prizmdoc/ubuntu
+      become: yes
+      become_user: root
+    
+    - role: ../../../roles/galaxy/logrotate
+      become: yes
+      become_user: root
+      logrotate_scripts:
+        - name: prizmdoc
+          path: /usr/share/prizm/logs/*.log
+          options:
+            - daily
+            - weekly
+            - size 25M
+            - rotate 7
+            - missingok
+            - compress
+            - delaycompress
+            - copytruncate

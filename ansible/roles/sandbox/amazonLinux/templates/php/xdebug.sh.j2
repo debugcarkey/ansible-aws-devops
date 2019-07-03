@@ -1,0 +1,18 @@
+cd /tmp/xdebug
+wget https://xdebug.org/files/xdebug-2.5.5.tgz
+tar -xzf xdebug-2.5.5.tgz
+cd xdebug-2.5.5
+phpize
+./configure --enable-xdebug
+make
+make install
+touch /etc/alternatives/php.d/20-xdebug.ini
+echo "zend_extension="xdebug.so"
+xdebug.remote_enable=1
+xdebug.remote_autostart=1
+xdebug.remote_host="localhost"
+xdebug.remote_port=9000
+xdebug.remote_connect_back=1
+xdebug.remote_handler="dbgp"
+xdebug.remote_log=/tmp/xdebug.log" > /etc/alternatives/php.d/20-xdebug.ini
+sudo service httpd restart

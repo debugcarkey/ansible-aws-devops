@@ -1,0 +1,2 @@
+[localhost]
+52.50.143.149 ansible_python_interpreter=/usr/bin/python ansible_ssh_private_key_file=utils/CSXSTG.pem ansible_ssh_user=ec2-user

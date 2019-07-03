@@ -1,0 +1,9 @@
+---
+- hosts: 127.0.0.1
+  connection: local
+  pre_tasks:  
+      
+  roles:
+    - role: ../../../roles/sandbox/ubuntu
+      become: yes
+      become_user: root

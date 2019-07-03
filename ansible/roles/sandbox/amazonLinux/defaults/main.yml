@@ -1,0 +1,15 @@
+csx_web_dir: ""
+csxv2_web_dir: ""
+csx_web_url: ""
+
+csc_web_dir: ""
+csc_web_url: ""
+csc_wp_web_dir: ""
+csc_wp_web_url: ""
+
+mysql_root_password: ""
+mysql_user1_username: ""
+mysql_user1_password: ""
+csx_database: ""
+cs_wp_database: ""
+application_env: ""

@@ -1,0 +1,42 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+# vagrant plugin install vagrant-vbguest
+Vagrant.configure("2") do |config|
+  # The most common configuration options are documented and commented below.
+  # For a complete reference, please see the online documentation at
+  # https://docs.vagrantup.com.
+
+  # Every Vagrant development environment requires a box. You can search for
+  # boxes at https://vagrantcloud.com/search.
+  config.vm.box = "mvbcoding/awslinux"
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "CSX"
+    vb.memory = 2048
+  end
+  config.vm.network "private_network", ip: "192.168.17.10"
+  config.vm.hostname="csx"
+  config.vm.provision "shell", inline: <<-SHELL
+   	mkdir -p /var/www
+  SHELL
+
+  config.vm.synced_folder "/var/www", "/var/www", disabled: false
+
+  config.vm.provision "ansible" do |ansible|
+  	ansible.verbose = "v"
+  	ansible.limit = "dev-webserver"
+  	ansible.playbook = "../ansible/playbooks/sandbox/amazonLinux/setup.yml"
+  	ansible.inventory_path = "./hosts" 
+  end
+  
+  config.vm.provision "ansible" do |ansible|
+     ansible.verbose = "v"
+     ansible.limit = "dev-webserver"
+     ansible.playbook = "../ansible/playbooks/prototypes/amazonLinux/setup.yml"
+     ansible.inventory_path = "./hosts" 
+   end
+end

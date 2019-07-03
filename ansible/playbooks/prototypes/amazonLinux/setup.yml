@@ -1,0 +1,9 @@
+---
+- hosts: all
+
+  pre_tasks:  
+      
+  roles:
+    - role: ../../../roles/prototypes/amazonLinux
+      become: yes
+      become_user: root

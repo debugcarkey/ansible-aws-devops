@@ -1,0 +1,32 @@
+---
+  # Upgrade all packages.
+  - name: upgrade all packages
+    become: yes
+    become_user: root
+    yum:
+      name: '*'
+      state: latest
+      
+  # Install dependencies.
+  - name: Install Dependencies.
+    become: yes
+    become_user: root
+    yum: pkg={{item}} state=installed
+    with_items:
+     - openssl-devel
+     - MySQL-python27
+     - zlib-devel
+     - php56
+     - mod24_ssl
+     - ImageMagick
+     - php56-pecl-imagick 
+     - zsh
+     - mailx
+     - mysql56-server
+     - php56-mysqlnd
+     - php56-devel
+     - git
+     
+  - include: "httpd.yml"
+  - include: "mysql.yml"
+  - include: "php.yml"

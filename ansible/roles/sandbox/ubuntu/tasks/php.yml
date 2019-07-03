@@ -1,0 +1,88 @@
+  # Add php repository
+  - name: Add php repository
+    become: yes
+    become_user: root
+    apt_repository: repo='ppa:ondrej/php'
+    
+  # Install httpd.
+  - name: Install Dependencies.
+    become: yes
+    become_user: root
+    apt: pkg={{item}} state=installed
+    with_items:
+      - php5.6
+      - php-imagick
+      - php5.6-mysql
+      - php5.6-mbstring
+      - php5.6-gd
+      - php5.6-curl
+      
+  - name: Setup composer 
+    become: yes
+    become_user: root
+    shell: cd /tmp && curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/composer
+      
+  # PHP config task that enables <? ?> tags in php.
+  - name: Enable short hand php tags.
+    become: yes
+    become_user: root
+    lineinfile:
+      path: /etc/php/5.6/apache2/php.ini
+      regexp: "^short_open_tag = Off"
+      line: "short_open_tag = On"
+       
+  # Enable errors in php for development environment.
+  - name: Display errors in php.
+    become: yes
+    become_user: root
+    lineinfile:
+      path: /etc/php/5.6/apache2/php.ini
+      regexp: "^display_errors = Off"
+      line: "display_errors = On"
+  
+  # Sets default time zone to europe/london in php.ini config
+  - name: Set default time zone in php.
+    become: yes
+    become_user: root
+    lineinfile: 
+      path: /etc/php/5.6/apache2/php.ini
+      regexp: "^;date.timezone ="
+      line: "date.timezone='europe/london'"
+   
+  - name: Set server host for terminal php script
+    become: yes
+    become_user: root
+    lineinfile:
+      path: /etc/bash.bashrc
+      line: "export HTTP_HOST={{csx_web_url}}\n export PHINX_ENVIRONMENT={{application_env}}"
+    
+    # Creates xdebug folder in temp directory.
+  - name: Create xdebug temp directory
+    file:
+      path: /tmp/xdebug
+      state: directory 
+      
+    # Copies xdebug configuration script
+  - name: Copy xdebug installation shell script.
+    run_once: true
+    become: yes
+    become_user: root
+    template:
+      src: php/xdebug.sh.j2
+      dest: /tmp/xdebug/setup.sh
+      mode: 0777
+    
+  #- name: Run xdebug configuration script
+   # become: yes
+   # become_user: root
+   # shell: /tmp/xdebug/setup.sh
+   # args:
+   #   creates: .xdebug-configured
+    
+  # After updating php.ini, restart apache server for the changes to affect.
+  - name: Restart apache server
+    become: yes
+    become_user: root
+    service:
+      name: apache2
+      state: restarted
